@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Review Applications | MU Connect</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    body {
+      background-color: #0e1a2b;
+      font-family: 'Poppins', sans-serif;
+      color: #fff;
+      margin: 0;
+      padding: 30px;
+    }
+
+    h1 {
+      text-align: center;
+      color: #0ef;
+      margin-bottom: 30px;
+    }
+
+    .application-list {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .application-card {
+      background-color: #1f293a;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0, 238, 255, 0.08);
+      margin-bottom: 20px;
+    }
+
+    .application-card h3 {
+      color: #0ef;
+      margin-bottom: 10px;
+    }
+
+    .application-card p {
+      margin: 6px 0;
+    }
+
+    .application-actions {
+      margin-top: 15px;
+    }
+
+    .application-actions button {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-right: 10px;
+    }
+
+    .approve-btn {
+      background-color: #0ef;
+      color: #1f293a;
+    }
+
+    .reject-btn {
+      background-color: #e63946;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Review Applications</h1>
+
+  <div class="application-list" id="applicationList">
+    <!-- Applications will be loaded here -->
+  </div>
+
+  <script>
+    const token = localStorage.getItem("token");
+    const facultyName = localStorage.getItem("userId");
+    const role = localStorage.getItem("role");
+
+    if (!token || role !== "faculty") {
+      window.location.href = "../login-form/dist/index.html";
+    }
+
+    const applicationList = document.getElementById("applicationList");
+
+    // ✅ Load applications
+    function loadApplications() {
+      fetch(`http://localhost:5000/api/applications/faculty/${facultyName}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+        .then(res => res.json())
+        .then(apps => {
+          if (!Array.isArray(apps)) return;
+
+          const html = apps.map(app => `
+            <div class="application-card">
+              <h3>${app.projectId?.title || "Untitled Project"}</h3>
+              <p><strong>Student:</strong> ${app.studentId?.name || "Unknown"}</p>
+              <p><strong>Email:</strong> ${app.studentId?.email || "Unknown"}</p>
+
+              <p><strong>Statement of Purpose:</strong> ${app.sop}</p>
+              <p><strong>Status:</strong> ${app.status || "Pending"}</p>
+              <div class="application-actions">
+                <button class="approve-btn" onclick="updateStatus('${app._id}', 'Approved')">Approve</button>
+                <button class="reject-btn" onclick="updateStatus('${app._id}', 'Rejected')">Reject</button>
+              </div>
+            </div>
+          `).join("");
+          
+        
+
+          applicationList.innerHTML = html;
+        });
+    }
+
+    loadApplications();
+
+    // ✅ Approve/Reject
+    function updateStatus(appId, status) {
+      fetch(`http://localhost:5000/api/applications/update/${appId}`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ status })
+      })
+        .then(res => res.json())
+        .then(() => {
+          alert(`Application ${status}`);
+          loadApplications();
+        })
+        .catch(err => {
+          console.error(err);
+          alert("Failed to update status.");
+        });
+    }
+  </script>
+
+</body>
+</html>

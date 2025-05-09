@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Faculty Meeting Schedule | MU Connect</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    body {
+      background-color: #0e1a2b;
+      font-family: 'Poppins', sans-serif;
+      color: #fff;
+      margin: 0;
+      padding: 30px;
+    }
+
+    h1 {
+      text-align: center;
+      color: #0ef;
+      margin-bottom: 30px;
+    }
+
+    form {
+      max-width: 500px;
+      margin: 0 auto;
+      background-color: #1f293a;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 0 12px rgba(0, 238, 255, 0.1);
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      margin-top: 20px;
+      font-weight: 600;
+      color: #0ef;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 10px;
+      border-radius: 6px;
+      border: none;
+      background-color: #24344d;
+      color: #fff;
+      font-size: 1em;
+    }
+
+    .btn {
+      background-color: #0ef;
+      color: #1f293a;
+      font-weight: bold;
+      padding: 12px 25px;
+      margin-top: 25px;
+      border-radius: 25px;
+      border: none;
+      cursor: pointer;
+    }
+
+    .meeting-list {
+      margin: 40px auto 0;
+      max-width: 600px;
+    }
+
+    .meeting-item {
+      background: #1f293a;
+      margin-bottom: 10px;
+      padding: 15px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0, 238, 255, 0.05);
+    }
+
+    .meeting-item strong {
+      color: #0ef;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Schedule a Meeting with Student</h1>
+
+  <form id="meetingForm">
+    <label for="student">Select Student</label>
+    <select id="student" name="student" required>
+      <option value="">-- Select Student --</option>
+    </select>
+
+    <label for="date">Meeting Date</label>
+    <input type="date" id="date" name="date" required />
+
+    <label for="time">Meeting Time</label>
+    <input type="time" id="time" name="time" required />
+
+    <button type="submit" class="btn">Schedule</button>
+  </form>
+
+  <div class="meeting-list" id="meetingList">
+    <h2 style="color:#0ef;">Upcoming Meetings</h2>
+  </div>
+
+  <script>
+    const token = localStorage.getItem("token");
+    const facultyId = localStorage.getItem("userId");
+    const role = localStorage.getItem("role");
+
+    if (!token || !facultyId || role !== "faculty") {
+      window.location.href = "../login-form/dist/index.html";
+    }
+
+    const studentDropdown = document.getElementById("student");
+    const meetingList = document.getElementById("meetingList");
+
+    // ✅ Load all students for dropdown
+    fetch("http://localhost:5000/api/auth/students", {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+      .then(res => res.json())
+      .then(students => {
+        students.forEach(student => {
+          const opt = document.createElement("option");
+          opt.value = student.name;
+          opt.textContent = student.name;
+          studentDropdown.appendChild(opt);
+        });
+      });
+
+    // ✅ Load existing meetings
+    fetch(`http://localhost:5000/api/meetings/faculty/${facultyId}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+      .then(res => res.json())
+      .then(meetings => {
+        if (!Array.isArray(meetings)) return;
+
+        const listHTML = meetings.map(m => {
+          const date = new Date(m.dateTime);
+          return `
+            <div class="meeting-item">
+              <strong>${m.studentId?.name || "Unknown Student"}</strong><br>
+              📅 ${date.toLocaleDateString()} @ ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            </div>`;
+        }).join("");
+
+        meetingList.innerHTML = "<h2 style='color:#0ef;'>Upcoming Meetings</h2>" + listHTML;
+      });
+
+    // ✅ Handle form submit
+    document.getElementById("meetingForm").addEventListener("submit", async function (e) {
+      e.preventDefault();
+
+      const studentName = document.getElementById("student").value;
+      const date = document.getElementById("date").value;
+      const time = document.getElementById("time").value;
+
+      if (!studentName || !date || !time) {
+        return alert("Please fill in all fields.");
+      }
+
+      const dateTime = new Date(`${date}T${time}`);
+
+      try {
+        const res = await fetch("http://localhost:5000/api/meetings", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            facultyId,
+            studentName,
+            dateTime,
+          }),
+        });
+
+        const result = await res.json();
+        if (!res.ok) throw new Error(result.message || "Failed to schedule");
+
+        alert("✅ Meeting scheduled!");
+        location.reload();
+      } catch (err) {
+        console.error("Error:", err);
+        alert("❌ Failed to schedule meeting.");
+      }
+    });
+  </script>
+
+</body>
+</html>

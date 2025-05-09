@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>MU CONNECT</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Page Title -->
+  <h1 class="page-title">MU CONNECT</h1>
+
+  <!-- Container -->
+  <div class="container">
+    <div class="login-box">
+      <div class="tab-switch">
+        <button id="loginBtn" class="active" onclick="toggleForm('login')">Login</button>
+        <button id="signupBtn" onclick="toggleForm('signup')">Signup</button>
+      </div>
+
+      <!-- Login Form -->
+      <div id="loginForm" class="form-section active">
+        <h2>Login</h2>
+        <form id="loginFormActual">
+          <div class="input-box">
+            <input name="email" type="email" required>
+            <label>Email</label>
+          </div>
+          <div class="input-box">
+            <input name="password" type="password" required>
+            <label>Password</label>
+          </div>
+          <div class="forgot-pass">
+            <a href="#">Forgot your password?</a>
+          </div>
+          <button type="submit" class="btn">Login</button>
+        </form>
+      </div>
+
+      <!-- Signup Form -->
+      <div id="signupForm" class="form-section">
+        <h2>Signup</h2>
+        <form id="signupFormActual">
+          <div class="input-box">
+            <input name="name" type="text" required>
+            <label>Full Name</label>
+          </div>
+          <div class="input-box">
+            <input name="email" type="email" required>
+            <label>Email</label>
+          </div>
+          <div class="input-box">
+            <input name="password" type="password" required>
+            <label>Password</label>
+          </div>
+          <div class="input-box">
+            <input name="confirm-password" type="password" required>
+            <label>Confirm Password</label>
+          </div>
+          <div class="input-box">
+            <select name="role" required>
+              <option value="">Select Role</option>
+              <option value="student">Student</option>
+              <option value="faculty">Faculty</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+          <button type="submit" class="btn">Signup</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Circles -->
+    <span style="--i:0;"></span><span style="--i:1;"></span><span style="--i:2;"></span><span style="--i:3;"></span><span style="--i:4;"></span>
+    <span style="--i:5;"></span><span style="--i:6;"></span><span style="--i:7;"></span><span style="--i:8;"></span><span style="--i:9;"></span>
+    <span style="--i:10;"></span><span style="--i:11;"></span><span style="--i:12;"></span><span style="--i:13;"></span><span style="--i:14;"></span>
+    <span style="--i:15;"></span><span style="--i:16;"></span><span style="--i:17;"></span><span style="--i:18;"></span><span style="--i:19;"></span>
+    <span style="--i:20;"></span><span style="--i:21;"></span><span style="--i:22;"></span><span style="--i:23;"></span><span style="--i:24;"></span>
+    <span style="--i:25;"></span><span style="--i:26;"></span><span style="--i:27;"></span><span style="--i:28;"></span><span style="--i:29;"></span>
+    <span style="--i:30;"></span><span style="--i:31;"></span><span style="--i:32;"></span><span style="--i:33;"></span><span style="--i:34;"></span>
+    <span style="--i:35;"></span><span style="--i:36;"></span><span style="--i:37;"></span><span style="--i:38;"></span><span style="--i:39;"></span>
+    <span style="--i:40;"></span><span style="--i:41;"></span><span style="--i:42;"></span><span style="--i:43;"></span><span style="--i:44;"></span>
+    <span style="--i:45;"></span><span style="--i:46;"></span><span style="--i:47;"></span><span style="--i:48;"></span><span style="--i:49;"></span>
+  </div>
+
+  <!-- Scripts -->
+  <script>
+    function toggleForm(type) {
+      const loginForm = document.getElementById('loginForm');
+      const signupForm = document.getElementById('signupForm');
+      const loginBtn = document.getElementById('loginBtn');
+      const signupBtn = document.getElementById('signupBtn');
+
+      if (type === 'login') {
+        loginForm.classList.add('active');
+        signupForm.classList.remove('active');
+        loginBtn.classList.add('active');
+        signupBtn.classList.remove('active');
+      } else {
+        signupForm.classList.add('active');
+        loginForm.classList.remove('active');
+        signupBtn.classList.add('active');
+        loginBtn.classList.remove('active');
+      }
+    }
+
+    // ✅ LOGIN
+    document.getElementById('loginFormActual').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      const email = this.email.value.trim();
+      const password = this.password.value;
+
+      try {
+        const res = await fetch('http://localhost:5000/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          alert('Login successful!');
+          localStorage.setItem('token', data.token);
+          localStorage.setItem('role', data.user.role);
+          localStorage.setItem('email', data.user.email);
+          localStorage.setItem('userId', data.user._id);    // ✅ Required for dashboard/chat/schedule
+          localStorage.setItem('name', data.user.name);     // ✅ Required for greeting/chat
+
+          if (data.user.role === 'student') {
+            window.location.href = '../../studentdashboard/studentdashboard.html';
+          } else if (data.user.role === 'faculty') {
+            window.location.href = '../../facultydashboard/facultydashboard.html';
+          } else if (data.user.role === 'admin') {
+            window.location.href = '../../admindashboard/admindashboard.html';
+          }
+        } else {
+          alert(data.message || 'Login failed.');
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Error logging in.');
+      }
+    });
+
+    // ✅ SIGNUP
+    document.getElementById('signupFormActual').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      const name = this.name.value.trim();
+      const email = this.email.value.trim();
+      const password = this.password.value;
+      const confirm = this['confirm-password'].value;
+      const role = this.role.value;
+
+      if (password !== confirm) {
+        alert('Passwords do not match!');
+        return;
+      }
+
+      try {
+        const res = await fetch('http://localhost:5000/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, email, password, role })
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          alert('Signup successful! You can now login.');
+          toggleForm('login');
+        } else {
+          alert(data.message || 'Signup failed.');
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Error signing up.');
+      }
+    });
+  </script>
+</body>
+</html>

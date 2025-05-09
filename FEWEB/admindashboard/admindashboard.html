@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Dashboard | MU Connect</title>
+  <link rel="stylesheet" href="../studentdashboard/style.css" />
+  <style>
+    body {
+      background-color: #0e1a2b;
+      color: #fff;
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
+      display: flex;
+    }
+
+    .sidebar {
+      width: 220px;
+      background-color: #1f293a;
+      height: 100vh;
+      padding: 20px;
+      position: fixed;
+      top: 0;
+      left: 0;
+    }
+
+    .sidebar h2 {
+      color: #0ef;
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .sidebar ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    .sidebar ul li {
+      margin: 20px 0;
+    }
+
+    .sidebar a {
+      color: #0ef;
+      text-decoration: none;
+      font-weight: 600;
+      display: block;
+      padding: 10px;
+      border-radius: 8px;
+      transition: background 0.3s;
+    }
+
+    .sidebar a:hover {
+      background: #0ef;
+      color: #1f293a;
+    }
+
+    .main-content {
+      margin-left: 240px;
+      padding: 30px;
+      flex: 1;
+    }
+
+    h1 {
+      color: #0ef;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+      background-color: #24344d;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    th, td {
+      padding: 12px 16px;
+      text-align: left;
+      border-bottom: 1px solid #0ef;
+    }
+
+    th {
+      background-color: #1f293a;
+      color: #0ef;
+    }
+
+    td input {
+      width: 100%;
+      padding: 6px;
+      border-radius: 6px;
+      border: none;
+      background-color: #1f293a;
+      color: #fff;
+    }
+
+    .btn {
+      background-color: #0ef;
+      color: #1f293a;
+      padding: 8px 14px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .btn-delete {
+      background-color: crimson;
+      color: #fff;
+    }
+
+    #searchInput {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      border-radius: 8px;
+      border: none;
+      font-size: 1em;
+    }
+
+    .btn-export {
+      margin-top: 10px;
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="sidebar">
+    <h2>Admin Panel</h2>
+    <ul>
+      <li><a href="admindashboard.html">Dashboard</a></li>
+      <li><a href="user-management.html">User Management</a></li>
+      <li><a href="project-oversight.html">Project Oversight</a></li>
+      <li><a href="manage-projects.html">Manage Projects</a></li>
+      <li><a href="reports.html">Reports</a></li>
+      <li><a href="#" onclick="logout()">Logout</a></li>
+    </ul>
+  </nav>
+
+  <div class="main-content">
+    <h1>Manage Faculty Projects</h1>
+
+    <input type="text" id="searchInput" placeholder="Search..." onkeyup="filterProjects()" />
+    <button class="btn btn-export" onclick="exportToCSV()">⬇️ Export as CSV</button>
+
+    <form id="newProjectForm" style="margin-top: 20px;">
+      <h3 style="color:#0ef;">Add New Project</h3>
+      <div style="display:flex; flex-wrap: wrap; gap: 10px;">
+        <input type="text" name="title" placeholder="Title" required />
+        <input type="text" name="faculty" placeholder="Faculty" required />
+        <input type="text" name="description" placeholder="Description" required />
+      
+        <input type="text" name="skills" placeholder="Skills (optional)" />
+        <button type="submit" class="btn">Add Project</button>
+      </div>
+    </form>
+
+    <table id="projectTable">
+      <thead>
+        <tr>
+          <th>Title</th>
+          <th>Faculty</th>
+          <th>Description</th>
+         
+          <th>Skills</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <script>
+    const token = localStorage.getItem("token");
+    const role = localStorage.getItem("role");
+    if (role !== "admin") window.location.href = "../login-form/dist/index.html";
+
+    const tableBody = document.querySelector("#projectTable tbody");
+    let allProjects = [];
+
+    function logout() {
+      localStorage.clear();
+      window.location.href = "../login-form/dist/index.html";
+    }
+
+    async function loadProjects() {
+      const res = await fetch("http://localhost:5000/api/admin/projects", {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+      allProjects = data;
+      renderTable(data);
+    }
+
+    function renderTable(projects) {
+  tableBody.innerHTML = "";
+  projects.forEach(p => {
+    const facultyName = p.facultyId?.name || 'Unknown';
+    const department = p.facultyId?.department || 'Unknown';
+
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td><input value="${p.title}" onchange="updateProject('${p._id}', 'title', this.value)" /></td>
+      <td><input value="${facultyName}" disabled /></td>
+      <td><input value="${p.description}" onchange="updateProject('${p._id}', 'description', this.value)" /></td>
+      <td><input value="${p.skills || ''}" onchange="updateProject('${p._id}', 'skills', this.value)" /></td>
+      <td><button class="btn btn-delete" onclick="deleteProject('${p._id}')">Delete</button></td>
+    `;
+    tableBody.appendChild(row);
+  });
+}
+
+
+    async function updateProject(id, field, value) {
+      await fetch(`http://localhost:5000/api/admin/projects/update/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ [field]: value }),
+      });
+    }
+
+    async function deleteProject(id) {
+      if (!confirm("Delete this project?")) return;
+      await fetch(`http://localhost:5000/api/admin/projects/${id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      loadProjects();
+    }
+
+    document.getElementById("newProjectForm").addEventListener("submit", async function (e) {
+      e.preventDefault();
+      const form = e.target;
+      const body = {
+        title: form.title.value,
+        faculty: form.faculty.value,
+        description: form.description.value,
+        department: form.department.value,
+        skills: form.skills.value
+      };
+
+      const res = await fetch("http://localhost:5000/api/admin/projects", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(body),
+      });
+
+      if (res.ok) {
+        form.reset();
+        loadProjects();
+      } else {
+        alert("Failed to add project.");
+      }
+    });
+
+    function filterProjects() {
+      const search = document.getElementById("searchInput").value.toLowerCase();
+      const filtered = allProjects.filter(p =>
+        p.title.toLowerCase().includes(search) ||
+        p.faculty.toLowerCase().includes(search) ||
+        p.department.toLowerCase().includes(search)
+      );
+      renderTable(filtered);
+    }
+
+    function exportToCSV() {
+      if (!allProjects.length) return alert("No data to export.");
+      const rows = [
+        ["Title", "Faculty", "Description", "Department", "Skills"],
+        ...allProjects.map(p => [p.title, p.faculty, p.description, p.department, p.skills || ""])
+      ];
+      const csv = rows.map(r => r.map(cell => `"${cell}"`).join(",")).join("\n");
+      const blob = new Blob([csv], { type: "text/csv" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = "admin_projects.csv";
+      link.click();
+    }
+
+    loadProjects();
+  </script>
+</body>
+</html>

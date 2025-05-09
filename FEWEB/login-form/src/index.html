@@ -1,0 +1,69 @@
+<div class="container">
+  <div class="tab-switch">
+    <button class="active" onclick="showForm('login')">Login</button>
+    <button onclick="showForm('signup')">Signup</button>
+  </div>
+
+  <!-- Login Form -->
+  <div class="login-box" id="login-form">
+    <h2>Login</h2>
+    <form action="#">
+      <div class="input-box">
+        <input name="email" type="email" required />
+        <label>Email</label>
+      </div>
+      <div class="input-box">
+        <input name="password" type="password" required />
+        <label>Password</label>
+      </div>
+      <div class="forgot-pass">
+        <a href="#">Forgot your password?</a>
+      </div>
+      <button type="submit" class="btn">Login</button>
+    </form>
+  </div>
+
+  <!-- Signup Form -->
+  <div class="login-box" id="signup-form" style="display: none;">
+    <h2>Signup</h2>
+    <form action="#">
+      <div class="input-box">
+        <input name="fullname" type="text" required />
+        <label>Full Name</label>
+      </div>
+      <div class="input-box">
+        <input name="email" type="email" required />
+        <label>Email</label>
+      </div>
+      <div class="input-box">
+        <input name="password" type="password" required />
+        <label>Password</label>
+      </div>
+      <div class="input-box">
+        <input name="confirm-password" type="password" required />
+        <label>Confirm Password</label>
+      </div>
+      <button type="submit" class="btn">Signup</button>
+    </form>
+  </div>
+
+<!-- Add this JS just before </body> -->
+<script>
+  function showForm(form) {
+    const loginForm = document.getElementById('login-form');
+    const signupForm = document.getElementById('signup-form');
+    const buttons = document.querySelectorAll('.tab-switch button');
+
+    if (form === 'login') {
+      loginForm.style.display = 'block';
+      signupForm.style.display = 'none';
+      buttons[0].classList.add('active');
+      buttons[1].classList.remove('active');
+    } else {
+      loginForm.style.display = 'none';
+      signupForm.style.display = 'block';
+      buttons[0].classList.remove('active');
+      buttons[1].classList.add('active');
+    }
+  }
+</script>

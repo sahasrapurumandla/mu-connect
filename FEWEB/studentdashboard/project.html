@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Available Projects | MU Connect</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    body {
+      background-color: #0e1a2b;
+      font-family: 'Poppins', sans-serif;
+      color: #fff;
+      margin: 0;
+      padding: 30px;
+    }
+
+    h1 {
+      text-align: center;
+      color: #0ef;
+      margin-bottom: 30px;
+    }
+
+    .project-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+    }
+
+    .project-card {
+      background-color: #1f293a;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0, 238, 255, 0.1);
+      transition: transform 0.2s ease;
+    }
+
+    .project-card:hover {
+      transform: translateY(-5px);
+    }
+
+    .project-card h2 {
+      color: #0ef;
+      margin-bottom: 10px;
+    }
+
+    .project-card p {
+      margin: 8px 0;
+      color: #ccc;
+    }
+
+    .btn {
+      display: inline-block;
+      background-color: #0ef;
+      color: #1f293a;
+      padding: 10px 18px;
+      border-radius: 25px;
+      text-decoration: none;
+      font-weight: bold;
+      margin-top: 12px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Available Projects</h1>
+
+  <div class="project-grid">
+    <!-- Project 1 -->
+    <div class="project-card">
+      <h2>AI Chatbot for Student Queries</h2>
+      <p><strong>Faculty:</strong> Dr. Smitha Rao</p>
+      <p><strong>Skills:</strong> Python, NLP, Flask</p>
+      <p><strong>Description:</strong> Build a chatbot using NLP to answer student questions in real-time.</p>
+      <a href="apply.html?project=AI%20Chatbot%20for%20Student%20Queries" class="btn">Apply</a>
+    </div>
+
+    <!-- Project 2 -->
+    <div class="project-card">
+      <h2>IoT Smart Attendance System</h2>
+      <p><strong>Faculty:</strong> Prof. Arvind Patel</p>
+      <p><strong>Skills:</strong> IoT, Arduino, Embedded C</p>
+      <p><strong>Description:</strong> Create a smart attendance system using RFID and IoT sensors.</p>
+      <a href="apply.html?project=IoT%20Smart%20Attendance%20System" class="btn">Apply</a>
+    </div>
+
+    <!-- Project 3 -->
+    <div class="project-card">
+      <h2>Web Portal for University Events</h2>
+      <p><strong>Faculty:</strong> Ms. Shalini Gupta</p>
+      <p><strong>Skills:</strong> HTML, CSS, JavaScript, Node.js</p>
+      <p><strong>Description:</strong> Design a platform for posting and registering university events.</p>
+      <a href="apply.html?project=Web%20Portal%20for%20University%20Events" class="btn">Apply</a>
+    </div>
+  </div>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      const projectGrid = document.querySelector('.project-grid');
+      const token = localStorage.getItem('token');
+  
+      if (!token) {
+        projectGrid.innerHTML = "<p>Please log in to view available projects.</p>";
+        return;
+      }
+  
+      try {
+        const response = await fetch('http://localhost:5000/api/projects', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+  
+        if (!response.ok) throw new Error('Failed to fetch projects');
+  
+        const projects = await response.json();
+  
+        // Clear any placeholder content
+        projectGrid.innerHTML = '';
+  
+        projects.forEach(project => {
+          const card = document.createElement('div');
+          card.classList.add('project-card');
+  
+          card.innerHTML = `
+            <h2>${project.title}</h2>
+            <p><strong>Faculty:</strong> ${project.facultyId?.name || 'N/A'}</p>
+            <p><strong>Skills:</strong> ${project.skills?.join(', ') || 'N/A'}</p>
+            <p><strong>Description:</strong> ${project.description || 'No description available.'}</p>
+            <a href="apply.html?project=${encodeURIComponent(project.title)}" class="btn">Apply</a>
+          `;
+  
+          projectGrid.appendChild(card);
+        });
+      } catch (err) {
+        console.error('❌ Error fetching projects:', err);
+        projectGrid.innerHTML = `<p style="color: red;">Could not load projects. Try again later.</p>`;
+      }
+    });
+  </script>
+  
+</body>
+</html>

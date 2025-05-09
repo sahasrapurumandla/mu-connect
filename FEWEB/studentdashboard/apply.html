@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Apply for Project | MU Connect</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    body {
+      background-color: #0e1a2b;
+      font-family: 'Poppins', sans-serif;
+      color: #fff;
+      margin: 0;
+      padding: 30px;
+    }
+
+    h1 {
+      text-align: center;
+      color: #0ef;
+      margin-bottom: 30px;
+    }
+
+    form {
+      max-width: 600px;
+      margin: 0 auto;
+      background-color: #1f293a;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 0 12px rgba(0, 238, 255, 0.1);
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      margin-top: 20px;
+      font-weight: 600;
+      color: #0ef;
+    }
+
+    input[type="text"],
+    textarea,
+    input[type="file"] {
+      width: 100%;
+      padding: 10px;
+      border-radius: 6px;
+      border: none;
+      background-color: #24344d;
+      color: #fff;
+      font-size: 1em;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 120px;
+    }
+
+    .btn {
+      background-color: #0ef;
+      color: #1f293a;
+      font-weight: bold;
+      padding: 12px 25px;
+      margin-top: 25px;
+      border-radius: 25px;
+      border: none;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Apply for Project</h1>
+
+  <form id="applicationForm" enctype="multipart/form-data">
+    <label for="project">Project Title</label>
+    <input type="text" id="project" name="project" readonly />
+
+    <label for="sop">Statement of Purpose</label>
+    <textarea id="sop" name="sop" placeholder="Why do you want to work on this project?" required></textarea>
+
+    <label for="resume">Upload Resume (optional)</label>
+    <input type="file" id="resume" name="resume" accept=".pdf,.doc,.docx" />
+
+    <button type="submit" class="btn">Submit Application</button>
+  </form>
+
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const projectTitle = urlParams.get('project');
+    document.getElementById('project').value = projectTitle ? decodeURIComponent(projectTitle) : 'Unknown Project';
+
+    document.getElementById('applicationForm').addEventListener('submit', async function (e) {
+      e.preventDefault();
+
+      const sop = document.getElementById('sop').value;
+      const resumeFile = document.getElementById('resume').files[0];
+      const token = localStorage.getItem('token');
+
+      if (!token) {
+        return alert('You must be logged in as a student to apply.');
+      }
+
+      try {
+        // Step 1: Get projectId from title
+        const projectRes = await fetch(`http://localhost:5000/api/projects/by-title/${encodeURIComponent(projectTitle)}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!projectRes.ok) throw new Error('Project not found');
+        const projectData = await projectRes.json();
+        const projectId = projectData._id;
+
+        // Step 2: Prepare FormData
+        const formData = new FormData();
+        formData.append('projectId', projectId);
+        formData.append('sop', sop);
+        if (resumeFile) {
+          formData.append('resume', resumeFile);
+        }
+
+        // Step 3: Submit application
+        const applyRes = await fetch('http://localhost:5000/api/applications', {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`, // Don't manually set Content-Type with FormData
+          },
+          body: formData,
+        });
+
+        const result = await applyRes.json();
+
+        if (!applyRes.ok) throw new Error(result.message || 'Submission failed');
+
+        alert('Application submitted successfully!');
+        document.getElementById('applicationForm').reset();
+      } catch (err) {
+        console.error('Error:', err);
+        alert('An error occurred. Please try again.');
+      }
+    });
+  </script>
+
+</body>
+</html>
