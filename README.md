@@ -15,7 +15,7 @@ git clone "https://github.com/sahasrapurumandla/mu-connect"
 cd mu-connect
 
 Backend Setup
-In termina(VScode) run below commands one by one to download the node_models and packages:
+In terminal(VScode) run below commands one by one to download the node_models and packages:
 •	cd backend
 •	npm install
 •	npm init -y
@@ -35,10 +35,10 @@ Navigate to the frontend folder:
 cd /FEWEB
 Open login-form/dist/index.html or any role-based dashboard using Live Server or manually open in browser.
  Default Login Roles (for testing)
-Role	    Email	                               Password
+Role	    Email	                Password
 Admin	 admin@gmail.com	   admin123
 Faculty	 faculty@gmail.com	    faculty123
-Student	  student@gmail.com         student123
+Student	  student@gmail.com   student123
 
 
  Features
@@ -151,5 +151,6 @@ Evaluation Notes
 •	Designed with modular architecture for scalability
 
 
-
+demo(on backend,frontend,datastorage in mongodb):"https://drive.google.com/file/d/1Imw2s6QklXKebAcXeU6-UaglajsqUKYW/view?usp=drivesdk"
+website demo:"https://drive.google.com/file/d/1Ia226NUq-9-YMPjrTkEeuQ3EcmmMfQTC/view?usp=drivesdk"
 
